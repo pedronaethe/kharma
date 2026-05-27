@@ -61,7 +61,6 @@ TaskCollection KHARMADriver::MakeImExTaskCollection(BlockList_t &blocks, int sta
 {
     // Reminder that this list is created BEFORE any of the list contents are run!
     // Prints or function calls here will likely not do what you want: instead, add to the list by calling tl.AddTask()
-
     TaskCollection tc;
     TaskID t_none(0);
 
@@ -77,7 +76,8 @@ TaskCollection KHARMADriver::MakeImExTaskCollection(BlockList_t &blocks, int sta
     const bool use_linesearch = (use_implicit) ? pkgs.at("Implicit")->Param<bool>("linesearch") : false;
     const bool emhd_enabled = pkgs.count("EMHD");
     const bool use_ideal_guess = (emhd_enabled) ? pkgs.at("GRMHD")->Param<bool>("ideal_guess") : false;
-
+    //Out of the package modification RADM1.
+    const bool use_radm1 = pkgs.count("RadM1");
     // Allocate/copy the things we need
     // TODO these can now be reduced by including the var lists/flags which actually need to be allocated
     // TODO except the Copy they can be run on step 1 only
@@ -264,11 +264,24 @@ TaskCollection KHARMADriver::MakeImExTaskCollection(BlockList_t &blocks, int sta
                                     md_solver.get(), md_solver.get(), 1.0, 0.0, md_sub_step_final.get());
         }
 
+        // Out of the package modification for RADM1.
+        auto t_rad1_solve = t_implicit;
+        if (use_radm1) {
+            // We pass the final explicit/implicit fluid state as both our input and target container
+            t_rad1_solve = tl.AddTask(t_implicit, RadM1::Step, 
+                                      md_full_step_init.get(), 
+                                      md_sub_step_init.get(), 
+                                      md_sub_step_final.get(), 
+                                      integrator->beta[stage-1] * integrator->dt);
+        }
+
+
         // Apply all floors & limits (GRMHD,EMHD,etc), but do *not* immediately correct UtoP failures with FixUtoP --
         // rather, we will synchronize (including pflags!) first.
         // With an extra ghost zone, this *should* still allow binary-similar evolution between numbers of mesh blocks,
         // but hasn't been tested to do so yet.
-        auto t_floors = tl.AddTask(t_implicit, Packages::MeshApplyFloors, md_sub_step_final.get(), IndexDomain::interior);
+        // Out of the package modification for RADM1.
+        auto t_floors = tl.AddTask(t_rad1_solve, Packages::MeshApplyFloors, md_sub_step_final.get(), IndexDomain::interior);
 
         KHARMADriver::AddBoundarySync(t_floors, tl, md_sync);
     }

@@ -52,10 +52,9 @@ TaskStatus BlockPtoU(MeshBlockData<Real> *rc, IndexDomain domain, bool coarse = 
 std::shared_ptr<KHARMAPackage> Initialize(ParameterInput *pin, std::shared_ptr<Packages_t>& packages);
 
 /**
- * Add the radM1 source term.  Applied in Flux::AddSource, just after the FluxDivergence calculation
+ * Perform the implicit solve for radiation and plasma coupled. For now, only 4D implemented.
  */
-//TaskStatus AddSource(MeshData<Real> *md, MeshData<Real> *mdudt, IndexDomain domain);
-TaskStatus AddImplicitRadiationSourceTerms(MeshData<Real> *md, MeshData<Real> *mdudt, IndexDomain domain);
+TaskStatus Step(MeshData<Real> *md_full_init, MeshData<Real> *md_sub_init, MeshData<Real> *md_sub_final, const Real dt);
 
 /**
  * Convert from conserved to primitive variables for the radiation field.

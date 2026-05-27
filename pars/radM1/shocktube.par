@@ -31,6 +31,12 @@ tlim = 100.0
 integrator = rk2
 dt_min = 0.0001
 
+<driver>
+type = imex
+# Second sync at the end of each step
+# Can skip this with the robust inverter & face_ct B fields
+two_sync = false
+
 <GRMHD>
 cfl = 0.1
 gamma = 1.666667
@@ -72,9 +78,9 @@ flag_verbose = 1
 
 <radM1>
 on = true
-kappa_ep = 0.4
-sigma = 3.085e9
-
+src_rootfind_eps = 1e-8
+src_rootfind_tol = 1e-8
+src_rootfind_maxiter = 50
 
 <units> 
 on = true
